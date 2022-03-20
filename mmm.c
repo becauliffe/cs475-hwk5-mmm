@@ -9,18 +9,41 @@
  * Allocate and initialize the matrices on the heap. Populate
  * the input matrices with random integers from 0 to 99
  */
-void mmm_init()
+
+void mmm_colInit(int SIZE, double **matrix)
 {
-	// TODO
+
+	int j;
+	for (int i = 0; i < SIZE; i++)
+	{
+		for (j = 0; j < SIZE; j++)
+		{
+			matrix[i][j] = rand() % 100;
+		}
+	}
+}
+void mmm_rowInit(int SIZE, double **matrix)
+{
+	int j;
+	for (int i = 0; i < SIZE; i++)
+	{
+		for (j = 0; j < SIZE; j++)
+		{
+			matrix[j][i] = rand() % 100;
+		}
+	}
 }
 
 /**
  * Reset a given matrix to zeroes
  * @param matrix pointer to a 2D array
  */
-void mmm_reset(double **matrix)
+void mmm_reset(double **matrix, int SIZE)
 {
-	// TODO
+	for (int i = 0; i < SIZE; i++)
+	{
+		memset(matrix[i], 0, SIZE * sizeof(double *));
+	}
 }
 
 /**
@@ -30,13 +53,32 @@ void mmm_freeup()
 {
 	// TODO
 }
-
+double **mmm_create(int SIZE)
+{
+	double **matrix = (double **)malloc(SIZE * sizeof(double *));
+	for (int i = 0; i < SIZE; i++)
+	{
+		matrix[i] = (double *)malloc(SIZE * sizeof(double));
+	}
+	return matrix;
+}
 /**
  * Sequential MMM
  */
-void mmm_seq()
+void mmm_seq(mmm_args *args)
 {
-	// TODO - code to perform sequential MMM
+	for (int i = 0; i < args->SIZE; i++)
+	{ // row
+		for (int j = 0; j < args->SIZE; j++)
+		{ // col
+			int temp = 0;
+			for (int k = 0; k < args->SIZE; k++)
+			{
+				temp += (args->one[i][k] * args->two[j][k]); // remember two is rotated
+			}
+			args->prod[i][j] = temp;
+		}
+	}
 }
 
 /**
@@ -44,7 +86,21 @@ void mmm_seq()
  */
 void *mmm_par(void *args)
 {
-	// TODO - code to perform parallel MMM
+
+	mmm_args *margs = args;
+	for (int i = margs->start; i < margs->end; i++)
+	{ // row
+		for (int j = 0; j < margs->SIZE; j++)
+		{ // col
+			int temp = 0;
+			for (int k = 0; k < margs->SIZE; k++)
+			{
+				temp += (margs->one[i][k] * margs->two[j][k]); // remember two is rotated
+			}
+			margs->prod[i][j] = temp;
+		}
+	}
+	return NULL;
 }
 
 /**
