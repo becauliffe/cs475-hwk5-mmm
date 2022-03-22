@@ -29,6 +29,15 @@ int main(int argc, char *argv[])
 		mmm_rowInit(SIZE, margs.one);
 		mmm_colInit(SIZE, margs.two);
 		mmm_seq(&margs);
+		printf("Resulting matrix: \n");
+		for (int i = 0; i < SIZE; i++)
+		{
+			for (int j = 0; j < SIZE; j++)
+			{
+				printf("%lf \t", margs.prod[i][j]);
+			}
+			printf("\n");
+		}
 	}
 	else if (argv[1][0] == 'P' && argc == 4)
 	{
@@ -52,20 +61,22 @@ int main(int argc, char *argv[])
 		margs.end[0] = sec;
 		pthread_t tid[numTh];
 		int i;
+		printf("%d\n", margs.end[0]);
 		for (i = 0; i < numTh; i++)
 		{
 			margs.tNum = i;
 
 			pthread_create(&tid[i], NULL, mmm_par, &margs);
 
-			margs.start[i] = margs.end[i];
-			margs.end[i] = sec * (i + 2);
+			margs.start[i + 1] = margs.end[i];
+			margs.end[i + 1] = sec * (i + 1);
 		}
 
 		for (i = 0; i < numTh; i++)
 		{
 			pthread_join(tid[i], NULL);
 		}
+
 		mmm_verify(&margs);
 		free(margs.start);
 		free(margs.end);

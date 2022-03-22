@@ -61,6 +61,9 @@ void mmm_freeup(mmm_args *margs)
 	free(margs->two);
 	free(margs->prod);
 }
+/**
+ * mallocs a matrix
+ **/
 double **mmm_create(int SIZE)
 {
 	double **matrix = (double **)malloc(SIZE * sizeof(double *));
@@ -139,19 +142,31 @@ void *mmm_par(void *args)
 {
 
 	mmm_args *margs = (mmm_args *)args;
-	int i = 0;
-	for (i = margs->start[i]; i < margs->end[i]; i++)
+
+	int i, j, k, num = margs->tNum;
+
+	for (i = margs->start[num]; i < margs->end[num]; i++)
 	{ // row
-		for (int j = 0; j < margs->SIZE; j++)
+		for (j = margs->start[num]; j < margs->end[num]; j++)
 		{ // col
 			int temp = 0;
-			for (int k = 0; k < margs->SIZE; k++)
+			for (k = margs->start[num]; k < margs->end[num]; k++)
 			{
 				temp += (margs->one[i][k] * margs->two[j][k]); // remember two is rotated
 			}
 			margs->prod[i][j] = temp;
 		}
 	}
+
+	// printf("Resulting matrix inside: \n");
+	// for (int i = 0; i < margs->SIZE; i++)
+	// {
+	// 	for (int j = 0; j < margs->SIZE; j++)
+	// 	{
+	// 		printf("%lf \t", margs->prod[i][j]);
+	// 	}
+	// 	printf("\n");
+	// }
 
 	return NULL;
 }
