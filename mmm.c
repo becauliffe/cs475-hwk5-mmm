@@ -49,9 +49,17 @@ void mmm_reset(double **matrix, int SIZE)
 /**
  * Free up memory allocated to all matrices
  */
-void mmm_freeup()
+void mmm_freeup(mmm_args *margs)
 {
-	// TODO
+	for (int i = 0; i < margs->SIZE; i++)
+	{
+		free(margs->one[i]);
+		free(margs->two[i]);
+		free(margs->prod[i]);
+	}
+	free(margs->one);
+	free(margs->two);
+	free(margs->prod);
 }
 double **mmm_create(int SIZE)
 {
@@ -65,30 +73,9 @@ double **mmm_create(int SIZE)
 /**
  * Sequential MMM
  */
-void mmm_seq(mmm_args *args)
+void mmm_seq(mmm_args *margs)
 {
-	for (int i = 0; i < args->SIZE; i++)
-	{ // row
-		for (int j = 0; j < args->SIZE; j++)
-		{ // col
-			int temp = 0;
-			for (int k = 0; k < args->SIZE; k++)
-			{
-				temp += (args->one[i][k] * args->two[j][k]); // remember two is rotated
-			}
-			args->prod[i][j] = temp;
-		}
-	}
-}
-
-/**
- * Parallel MMM
- */
-void *mmm_par(void *args)
-{
-
-	mmm_args *margs = args;
-	for (int i = margs->start; i < margs->end; i++)
+	for (int i = 0; i < margs->SIZE; i++)
 	{ // row
 		for (int j = 0; j < margs->SIZE; j++)
 		{ // col
@@ -100,7 +87,6 @@ void *mmm_par(void *args)
 			margs->prod[i][j] = temp;
 		}
 	}
-	return NULL;
 }
 
 /**
@@ -110,8 +96,62 @@ void *mmm_par(void *args)
  * @return the largest error between two corresponding elements
  * in the result matrices
  */
-double mmm_verify()
+void mmm_verify(mmm_args *margs)
 {
-	// TODO
-	return -1;
+	// mmm_args *margs = args;
+	for (int i = 0; i < margs->SIZE; i++)
+	{ // row
+		for (int j = 0; j < margs->SIZE; j++)
+		{ // col
+			int temp = 0;
+			for (int k = 0; k < margs->SIZE; k++)
+			{
+				temp += (margs->one[i][k] * margs->two[j][k]); // remember two is rotated
+			}
+			margs->ver[i][j] = temp;
+		}
+	}
+
+	int length = margs->SIZE;
+
+	int greatestDiff = 0;
+	for (int i = 0; i < length; i++)
+	{ // row
+		for (int j = 0; j < length; j++)
+		{ // col
+			int diff = 0;
+
+			diff = margs->prod[i][j] - margs->ver[i][j];
+			if (diff > greatestDiff)
+			{
+				greatestDiff = diff;
+			}
+		}
+	}
+	printf("Verifying... largest error between parallel and sequential matrix: %d\n", greatestDiff);
+	return;
+}
+
+/**
+ * Parallel MMM
+ */
+void *mmm_par(void *args)
+{
+
+	mmm_args *margs = (mmm_args *)args;
+	int i = 0;
+	for (i = margs->start[i]; i < margs->end[i]; i++)
+	{ // row
+		for (int j = 0; j < margs->SIZE; j++)
+		{ // col
+			int temp = 0;
+			for (int k = 0; k < margs->SIZE; k++)
+			{
+				temp += (margs->one[i][k] * margs->two[j][k]); // remember two is rotated
+			}
+			margs->prod[i][j] = temp;
+		}
+	}
+
+	return NULL;
 }

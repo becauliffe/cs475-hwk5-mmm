@@ -17,29 +17,31 @@ int main(int argc, char *argv[])
 	clockstart = rtclock(); // start clocking
 
 	// start: stuff I want to clock
-
+	mmm_args margs;
 	if (argv[1][0] == 'S' && argc == 3)
 	{
 		SIZE = atoi(argv[2]);
-		mmm_args args;
-		args.one = mmm_create(SIZE);
-		args.two = mmm_create(SIZE);
-		args.prod = mmm_create(SIZE);
-		args.SIZE = SIZE;
-		mmm_rowInit(SIZE, args.one);
-		mmm_colInit(SIZE, args.two);
-		mmm_seq(&args);
-	}
-	else if (argv[1][0] == 'P' && argc == 4)
-	{
-		SIZE = atoi(argv[3]);
-		mmm_args margs;
+
 		margs.one = mmm_create(SIZE);
 		margs.two = mmm_create(SIZE);
 		margs.prod = mmm_create(SIZE);
 		margs.SIZE = SIZE;
 		mmm_rowInit(SIZE, margs.one);
 		mmm_colInit(SIZE, margs.two);
+		mmm_seq(&margs);
+	}
+	else if (argv[1][0] == 'P' && argc == 4)
+	{
+		SIZE = atoi(argv[3]);
+		margs.one = mmm_create(SIZE);
+		margs.two = mmm_create(SIZE);
+		margs.prod = mmm_create(SIZE);
+		margs.ver = mmm_create(SIZE);
+		margs.SIZE = SIZE;
+		mmm_rowInit(SIZE, margs.one);
+		mmm_colInit(SIZE, margs.two);
+		margs.start = (int *)malloc(margs.tNum * sizeof(int));
+		margs.end = (int *)malloc(margs.tNum * sizeof(int));
 
 		int numTh = atoi(argv[2]);
 		if (numTh >= SIZE)
@@ -47,18 +49,24 @@ int main(int argc, char *argv[])
 			numTh = SIZE - 1;
 		}
 		int sec = SIZE / numTh;
-		margs.end = sec;
+		margs.end[0] = sec;
 		pthread_t tid[numTh];
-
-		for (int i = 0; i < numTh; i++)
+		int i;
+		for (i = 0; i < numTh; i++)
 		{
 			margs.tNum = i;
 
 			pthread_create(&tid[i], NULL, mmm_par, &margs);
 
-			margs.start = margs.end;
-			margs.end = sec * (i + 2);
+			margs.start[i] = margs.end[i];
+			margs.end[i] = sec * (i + 2);
 		}
+
+		for (i = 0; i < numTh; i++)
+		{
+			pthread_join(tid[i], NULL);
+		}
+		mmm_verify(&margs);
 	}
 	else
 	{
@@ -69,6 +77,6 @@ int main(int argc, char *argv[])
 
 	clockend = rtclock(); // stop clocking
 	printf("Time taken: %.6f sec\n", (clockend - clockstart));
-
+	mmm_freeup(&margs);
 	return 0;
 }

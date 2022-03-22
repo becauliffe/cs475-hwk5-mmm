@@ -9,11 +9,12 @@ typedef struct
 {
     int SIZE;
     int tNum;
-    int start;
-    int end;
+    int *start;
+    int *end;
     double **one;
     double **two;
     double **prod;
+    double **ver;
 } mmm_args;
 
 void mmm_colInit(int SIZE, double **matrix);
@@ -21,10 +22,10 @@ void mmm_rowInit(int SIZE, double **matrix);
 void mmm_reset(double **matrix, int SIZE);
 void mmm_freeup();
 double **mmm_create(int SIZE);
-void mmm_seq();
+void mmm_seq(mmm_args *margs);
 void *mmm_par(void *args);
-double mmm_verify();
-
+void mmm_verify(mmm_args *margs);
+void mmm_verSeq(mmm_args *margs);
 extern double **one;
 extern double **two;
 extern double **prod;
