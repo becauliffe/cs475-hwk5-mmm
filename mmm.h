@@ -9,8 +9,7 @@ typedef struct
 {
     int SIZE;
     int tNum;
-    int *start;
-    int *end;
+    int numTh;
     double **one;
     double **two;
     double **prod;
@@ -29,5 +28,6 @@ void mmm_verSeq(mmm_args *margs);
 extern double **one;
 extern double **two;
 extern double **prod;
+extern int *thrNum;
 
 #endif /* MMM_H_ */

@@ -29,57 +29,48 @@ int main(int argc, char *argv[])
 		mmm_rowInit(SIZE, margs.one);
 		mmm_colInit(SIZE, margs.two);
 		mmm_seq(&margs);
-		printf("Resulting matrix: \n");
-		for (int i = 0; i < SIZE; i++)
-		{
-			for (int j = 0; j < SIZE; j++)
-			{
-				printf("%lf \t", margs.prod[i][j]);
-			}
-			printf("\n");
-		}
+
+		mmm_freeup(&margs);
 	}
 	else if (argv[1][0] == 'P' && argc == 4)
 	{
 		SIZE = atoi(argv[3]);
-		margs.one = mmm_create(SIZE);
-		margs.two = mmm_create(SIZE);
-		margs.prod = mmm_create(SIZE);
-		margs.ver = mmm_create(SIZE);
-		margs.SIZE = SIZE;
-		mmm_rowInit(SIZE, margs.one);
-		mmm_colInit(SIZE, margs.two);
-		margs.start = (int *)malloc(margs.tNum * sizeof(int));
-		margs.end = (int *)malloc(margs.tNum * sizeof(int));
-
 		int numTh = atoi(argv[2]);
+		double **one = mmm_create(SIZE);
+		double **two = mmm_create(SIZE);
+		double **prod = mmm_create(SIZE);
+		double **ver = mmm_create(SIZE);
+		mmm_rowInit(SIZE, one);
+		mmm_colInit(SIZE, two);
 		if (numTh >= SIZE)
 		{
 			numTh = SIZE - 1;
 		}
-		int sec = SIZE / numTh;
-		margs.end[0] = sec;
 		pthread_t tid[numTh];
+		mmm_args margs[numTh];
+
 		int i;
-		printf("%d\n", margs.end[0]);
+
 		for (i = 0; i < numTh; i++)
 		{
-			margs.tNum = i;
+			margs[i].one = one;
+			margs[i].two = two;
+			margs[i].prod = prod;
+			margs[i].SIZE = SIZE;
+			margs[i].ver = ver;
+			margs[i].numTh = numTh;
+			margs[i].tNum = i;
 
-			pthread_create(&tid[i], NULL, mmm_par, &margs);
-
-			margs.start[i + 1] = margs.end[i];
-			margs.end[i + 1] = sec * (i + 1);
+			pthread_create(&tid[i], NULL, mmm_par, &margs[i]);
 		}
-
 		for (i = 0; i < numTh; i++)
 		{
 			pthread_join(tid[i], NULL);
 		}
 
-		mmm_verify(&margs);
-		free(margs.start);
-		free(margs.end);
+		mmm_verify(&margs[0]);
+
+		mmm_freeup(&margs[0]);
 	}
 	else
 	{
@@ -90,6 +81,6 @@ int main(int argc, char *argv[])
 
 	clockend = rtclock(); // stop clocking
 	printf("Time taken: %.6f sec\n", (clockend - clockstart));
-	mmm_freeup(&margs);
+
 	return 0;
 }
